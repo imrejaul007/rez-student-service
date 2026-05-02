@@ -1,0 +1,31 @@
+# Render Blueprint for rez-student-service
+# Deploy at: https://dashboard.render.com/blueprints
+
+services:
+  - type: web
+    name: rez-student-service
+    env: node
+    region: singapore
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4025
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: WALLET_SERVICE_URL
+        value: https://rez-wallet-service.onrender.com
+      - key: GAMIFICATION_SERVICE_URL
+        value: https://rez-gamification-service.onrender.com
+      - key: NOTIFICATION_SERVICE_URL
+        value: https://rez-push-service.onrender.com
+      - key: LOG_LEVEL
+        value: info
