@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Cloudinary } from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
+import mongoose from 'mongoose';
 import { StudentVerification, Institution, StudentProfile, StudentWallet, StudentMission } from '../models';
 import {
   VerificationStatus,
@@ -11,14 +12,8 @@ import {
 import { logger } from '../config/logger';
 
 export class VerificationService {
-  private cloudinary: typeof Cloudinary;
-
   constructor() {
-    this.cloudinary = new Cloudinary({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET
-    }) as any;
+    // Cloudinary v2 uses the v2 API
   }
 
   async submitVerification(params: {
@@ -71,7 +66,12 @@ export class VerificationService {
       const expiresAt = this.calculateExpirationDate();
 
       // Try auto-verification
-      const autoVerificationResult = await this.tryAutoVerification(params, institution);
+      const autoVerificationResult = await this.tryAutoVerification({
+        email: params.email,
+        institutionId: params.institutionId,
+        studentIdNumber: params.studentIdNumber,
+        documentType: params.documentType
+      }, institution);
 
       const verification = new StudentVerification({
         userId: params.userId,
@@ -150,7 +150,7 @@ export class VerificationService {
   }
 
   private async tryAutoVerification(
-    params: { email?: string; institutionId: string; studentIdNumber: string },
+    params: { email?: string; institutionId: string; studentIdNumber: string; documentType?: DocumentType },
     institution: any
   ): Promise<{ verified: boolean; score: number }> {
     let score = 0;
@@ -282,12 +282,12 @@ export class VerificationService {
 
     verification.status = VerificationStatus.VERIFIED;
     verification.verifiedAt = new Date();
-    verification.verifiedBy = adminId;
+    verification.verifiedBy = new mongoose.Types.ObjectId(adminId);
     verification.verificationMethod = VerificationMethod.MANUAL;
     verification.verificationHistory.push({
       status: VerificationStatus.VERIFIED,
       changedAt: new Date(),
-      changedBy: adminId,
+      changedBy: new mongoose.Types.ObjectId(adminId),
       reason: 'Manually approved by admin'
     });
 
@@ -313,7 +313,7 @@ export class VerificationService {
     verification.verificationHistory.push({
       status: VerificationStatus.REJECTED,
       changedAt: new Date(),
-      changedBy: adminId,
+      changedBy: new mongoose.Types.ObjectId(adminId),
       reason
     });
 

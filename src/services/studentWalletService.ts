@@ -2,6 +2,7 @@ import { StudentWallet, FundingRequest, StudentTransaction, StudentBudget } from
 import { FundingRequestStatus } from '../types';
 import { logger } from '../config/logger';
 import axios from 'axios';
+import mongoose from 'mongoose';
 
 const WALLET_SERVICE_URL = process.env.WALLET_SERVICE_URL || 'http://localhost:4004';
 
@@ -53,6 +54,10 @@ export class StudentWalletService {
     const parentConnection = wallet.parentConnections.find(
       p => p.parentId.toString() === params.parentId
     );
+
+    if (!parentConnection) {
+      throw new Error('Parent connection not found');
+    }
 
     if (parentConnection.monthlyLimit) {
       const monthlySpent = await this.getParentMonthlySpending(params.parentId, params.studentId);
@@ -128,7 +133,7 @@ export class StudentWalletService {
     request.status = FundingRequestStatus.APPROVED;
     request.respondedAt = new Date();
     request.responseNote = params.note;
-    request.transactionId = transferResult.transactionId;
+    request.transactionId = new mongoose.Types.ObjectId(transferResult.transactionId);
 
     await request.save();
 
@@ -232,7 +237,7 @@ export class StudentWalletService {
       existing.spendingLimitPerTransaction = params.spendingLimitPerTransaction;
     } else {
       wallet.parentConnections.push({
-        parentId: params.parentId,
+        parentId: new mongoose.Types.ObjectId(params.parentId),
         relationship: params.relationship,
         linkedAt: new Date(),
         monthlyLimit: params.monthlyLimit,
@@ -514,8 +519,8 @@ export class StudentWalletService {
       spentThisMonth: wallet.studentCash.spentThisMonth,
       budgetAlertAt: wallet.studentCash.budgetAlertAt,
       parents: wallet.parentConnections
-        .filter(p => p.status === 'active')
-        .map(p => ({
+        .filter((p: any) => p.status === 'active')
+        .map((p: any) => ({
           id: p.parentId._id,
           name: p.parentId.name,
           phone: p.parentId.phone,

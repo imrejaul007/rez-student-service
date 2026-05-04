@@ -108,9 +108,9 @@ export class StudentPricingService {
       const discount = params.basePrice - studentPrice;
       const discountPercent = (discount / params.basePrice) * 100;
 
-      const isEligible = pricingConfig.campusExclusive
-        ? pricingConfig.campusExclusive.includes(verificationStatus.institutionId)
-        : true;
+      const isEligible = !pricingConfig.campusExclusive ||
+        !verificationStatus.institutionId ||
+        pricingConfig.campusExclusive.includes(verificationStatus.institutionId);
 
       return {
         originalPrice: params.basePrice,

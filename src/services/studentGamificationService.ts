@@ -276,6 +276,7 @@ export class StudentGamificationService {
     period: 'weekly' | 'monthly' | 'all_time';
     page?: number;
     limit?: number;
+    userId?: string;
   }): Promise<any> {
     const page = params.page || 1;
     const limit = params.limit || 10;

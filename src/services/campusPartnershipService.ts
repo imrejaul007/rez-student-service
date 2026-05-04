@@ -2,6 +2,7 @@ import { CampusPartner, Institution, StudentTransaction } from '../models';
 import { OfferType, PartnershipStatus } from '../types';
 import { logger } from '../config/logger';
 import axios from 'axios';
+import mongoose from 'mongoose';
 
 const CATALOG_SERVICE_URL = process.env.CATALOG_SERVICE_URL || 'http://localhost:4006';
 const WALLET_SERVICE_URL = process.env.WALLET_SERVICE_URL || 'http://localhost:4004';
@@ -315,8 +316,7 @@ export class CampusPartnershipService {
     partnership.stats.lastRedemptionAt = new Date();
 
     // Track unique students
-    const existingStudent = partnership.stats.uniqueStudents;
-    await this.trackUniqueStudent(partnership._id, params.studentId);
+    await this.trackUniqueStudent(partnership._id.toString(), params.studentId);
 
     await partnership.save();
 
@@ -615,7 +615,7 @@ export class CampusPartnershipService {
     );
   }
 
-  private async notifyMerchant(merchantId: string, data: any): Promise<void> {
+  private async notifyMerchant(merchantId: mongoose.Types.ObjectId | string, data: any): Promise<void> {
     try {
       await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/send`, {
         userId: merchantId,

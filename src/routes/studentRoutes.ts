@@ -5,6 +5,7 @@ import { studentWalletService } from '../services/studentWalletService';
 import { studentGamificationService } from '../services/studentGamificationService';
 import { campusPartnershipService } from '../services/campusPartnershipService';
 import { studentPricingService } from '../services/studentPricingService';
+import { Institution, StudentProfile } from '../models';
 import { DocumentType } from '../types';
 
 const router = Router();
@@ -148,7 +149,6 @@ router.post('/admin/verifications/:id/reject', async (req: Request, res: Respons
  */
 router.get('/institutions', async (req: Request, res: Response) => {
   try {
-    const { Institution } = require('../models');
     const { search, type, city, page = '1', limit = '20' } = req.query;
 
     const query: any = {};
@@ -641,7 +641,6 @@ router.post('/referral/apply', async (req: Request, res: Response) => {
     }
 
     // Find student by referral code
-    const { StudentProfile } = require('../models');
     const referrer = await StudentProfile.findOne({ referralCode });
 
     if (!referrer) {
